@@ -1,21 +1,24 @@
-script.js
 // Mobile Menu Toggle
 document.addEventListener('DOMContentLoaded', function() {
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.querySelector('.nav-menu');
+    const navbar = document.querySelector('.navbar');
     
-    if (hamburger) {
+    // ---------- Mobile menu toggle ----------
+    if (hamburger && navMenu) {
         hamburger.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             hamburger.textContent = navMenu.classList.contains('active') ? '✕' : '☰';
         });
     }
 
-    // Smooth scrolling for navigation links
+    // ---------- Smooth scrolling for navigation links ----------
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return; // ignore empty links
+            const target = document.querySelector(targetId);
             if (target) {
                 target.scrollIntoView({
                     behavior: 'smooth',
@@ -24,57 +27,71 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Close mobile menu if open
                 if (navMenu && navMenu.classList.contains('active')) {
                     navMenu.classList.remove('active');
-                    hamburger.textContent = '☰';
+                    if (hamburger) hamburger.textContent = '☰';
                 }
             }
         });
     });
 
-    // Navbar background change on scroll
-    const navbar = document.querySelector('.navbar');
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 50) {
-            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-            navbar.style.backdropFilter = 'blur(10px)';
-        } else {
-            navbar.style.background = '#fff';
-            navbar.style.backdropFilter = 'none';
-        }
-    });
+    // ---------- Navbar background change on scroll ----------
+    if (navbar) {
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+                navbar.style.backdropFilter = 'blur(10px)';
+                navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            } else {
+                navbar.style.background = '#fff';
+                navbar.style.backdropFilter = 'none';
+                navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            }
+        });
+    }
 
-    // Form submission
+    // ---------- Form submission (prevent default + show message) ----------
     const contactForm = document.querySelector('.contact-form');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             // Get form data
-            const formData = {
-                name: this.querySelector('input[type="text"]').value,
-                email: this.querySelector('input[type="email"]').value,
-                subject: this.querySelector('input[placeholder="Subject"]').value,
-                message: this.querySelector('textarea').value
-            };
+            const nameInput = this.querySelector('input[placeholder="Your Name"]');
+            const emailInput = this.querySelector('input[placeholder="Your Email"]');
+            const subjectInput = this.querySelector('input[placeholder="Subject"]');
+            const messageInput = this.querySelector('textarea');
 
-            // Show success message
+            if (!nameInput.value || !emailInput.value || !messageInput.value) {
+                alert('Please fill in all required fields (Name, Email, Message).');
+                return;
+            }
+
+            // Here you can send data to your backend using fetch()
+            // For now, we just simulate success
             alert('Thank you for your message! I will get back to you soon.');
             this.reset();
         });
     }
 
-    // Animate stats numbers
-    const stats = document.querySelectorAll('.stat-number');
+    // ---------- Animate stats numbers (only once) ----------
     const statsSection = document.querySelector('.about-stats');
-    
+    const stats = document.querySelectorAll('.stat-number');
+    let animationStarted = false;
+
     function animateStats() {
+        if (animationStarted) return; // ensure it runs only once
+        animationStarted = true;
+
         stats.forEach(stat => {
-            const target = parseInt(stat.textContent);
+            const targetText = stat.textContent; // e.g., "50+"
+            const targetNumber = parseInt(targetText); // 50
+            if (isNaN(targetNumber)) return;
+
             let current = 0;
-            const increment = target / 50;
+            const increment = targetNumber / 50; // increment per step
             const timer = setInterval(() => {
                 current += increment;
-                if (current >= target) {
-                    stat.textContent = target + '+';
+                if (current >= targetNumber) {
+                    stat.textContent = targetNumber + '+';
                     clearInterval(timer);
                 } else {
                     stat.textContent = Math.floor(current) + '+';
@@ -84,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Intersection Observer for stats animation
-    if (statsSection) {
+    if (statsSection && stats.length > 0) {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -97,18 +114,35 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(statsSection);
     }
 
-    // Project cards hover effect
-    const projectCards = document.querySelectorAll('.project-card');
-    projectCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-10px)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
+    // ---------- Remove redundant hover effect (already in CSS) ----------
+    // Project cards hover is handled by CSS, no need for JS.
 
-    // Console welcome message
+    // ---------- Console welcome message ----------
     console.log('%c🚀 Portfolio Website Loaded!', 'color: #667eea; font-size: 16px; font-weight: bold;');
     console.log('%c👋 Welcome to Ankit\'s Portfolio', 'color: #764ba2; font-size: 14px;');
 });
+
+// ---------- Additional: Add active class to nav links on scroll (optional) ----------
+// You can uncomment this if you want to highlight the current section in navbar
+/*
+window.addEventListener('scroll', function() {
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-menu a');
+    
+    let current = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= sectionTop - 100) {
+            current = section.getAttribute('id');
+        }
+    });
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+            link.classList.add('active');
+        }
+    });
+});
+*/
